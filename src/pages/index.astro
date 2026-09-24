@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Header from '../components/Header.astro';
+import Playground from '../components/Playground.astro';
+import GpuCalculator from '../components/GpuCalculator.astro';
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL : `${import.meta.env.BASE_URL}/`;
+---
+
+<Layout title="Laboratorio de Transformadas Matemáticas | Astrofísica y CNNs">
+  <Header />
+
+  <main class="flex-grow">
+    <!-- Hero Banner Visual y Demostrativo (Modo Claro Científico) -->
+    <section class="relative py-12 sm:py-16 overflow-hidden border-b border-slate-200/80 bg-white/70">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-50 text-blue-700 border border-blue-200 mb-4 shadow-xs">
+          <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+          <span>Telescopio Espacial James Webb (NIRCam & MIRI)</span>
+        </div>
+        <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none">
+          ¿Cómo Elegir la Transformada Óptima para una <span class="text-blue-600 underline decoration-blue-200 decoration-wavy decoration-2">Imagen Compleja</span>?
+        </h1>
+        <p class="mt-4 text-sm sm:text-base text-slate-600 max-w-2xl mx-auto leading-relaxed">
+          Plataforma interactiva para demostraciones en vivo: experimenta en tiempo real con <strong>Sobel</strong>, <strong>Fourier 2D</strong>, <strong>Convolución de CNNs</strong> y <strong>Wavelets (db4)</strong> usando datos infrarrojos del telescopio James Webb.
+        </p>
+
+        <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+          <a href="#laboratorio" class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-blue-600 text-white hover:bg-blue-700 shadow-md shadow-blue-500/20 active:scale-95 transition">
+            🎮 Laboratorio Interactivo
+          </a>
+          <a href={`${base}matematica-paso-a-paso`} class="px-5 py-2.5 rounded-xl font-bold text-xs sm:text-sm bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 active:scale-95 transition shadow-xs flex items-center gap-1.5">
+            <span>📐 Pizarra Matemática (Paso a Paso)</span>
+          </a>
+          <a href="#calculadora" class="px-5 py-2.5 rounded-xl font-semibold text-xs sm:text-sm bg-white text-slate-700 hover:bg-slate-50 border border-slate-200 hover:border-slate-300 shadow-xs transition">
+            ⚡ Simulador VRAM GPU
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 1. Laboratorio Interactivo en Canvas con Colormaps y Wavelets -->
+    <Playground />
+
+    <!-- 2. Calculadora de GPU y FLOPs -->
+    <GpuCalculator />
+
+    <!-- 3. Banner Conector hacia la Pizarra Matemática Paso a Paso -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div class="relative rounded-3xl p-8 sm:p-12 overflow-hidden bg-gradient-to-br from-blue-50/80 via-white to-indigo-50/80 border border-slate-200 shadow-md">
+        <div class="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div class="space-y-3 text-center md:text-left max-w-2xl">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-mono font-semibold bg-blue-100 text-blue-800 border border-blue-200">
+              Modo Examen / Defensa Académica
+            </span>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              ¿Quieres ver cada fórmula original desglosada y calculada a mano?
+            </h2>
+            <p class="text-sm text-slate-600 leading-relaxed">
+              En nuestra <strong>Pizarra Matemática Paso a Paso</strong> presentamos la función matemática canónica de cada transformada, la anatomía de cada variable (u, v, x, y, exp(-jθ)), la razón de por qué existe cada variación y las operaciones aritméticas resueltas paso a paso sin saltos mágicos.
+            </p>
+          </div>
+          <div class="flex-shrink-0">
+            <a href={`${base}matematica-paso-a-paso`} class="inline-flex items-center gap-2 px-6 py-3.5 rounded-2xl font-bold text-sm bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transition transform hover:-translate-y-0.5 active:scale-95">
+              <span>📐 Abrir Pizarra Matemática</span>
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer Académico en Modo Claro -->
+  <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 font-mono">
+    <div class="max-w-7xl mx-auto px-4 space-y-2">
+      <p class="text-slate-600 font-medium">
+        Maestría en Ciencia de Datos • Capítulo 10: Harmonic Analysis for Convolutional Neural Networks
+      </p>
+      <p>
+        Desarrollado con Astro, Tailwind CSS, Canvas API y KaTeX. Datos astronómicos cortesía de NASA / ESA / CSA / STScI.
+      </p>
+    </div>
+  </footer>
+</Layout>
