@@ -179,10 +179,18 @@
       <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
         <div class="w-full flex items-center justify-between mb-2.5 px-1">
           <span class="text-xs font-mono font-bold text-slate-800">1. ENTRADA (Original)</span>
-          <span id="canvas-orig-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">512 × 512</span>
+          <div class="flex items-center gap-1.5">
+            <span id="canvas-orig-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">512 × 512</span>
+            <button id="zoom-orig-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
+              <span>Ampliar</span>
+            </button>
+          </div>
         </div>
-        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
+        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
           <canvas id="canvas-original" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+          <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+            Clic para ampliar
+          </div>
         </div>
         <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="pixel-inspector">
           Pasa el cursor sobre la imagen para inspeccionar píxeles
@@ -193,10 +201,18 @@
       <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
         <div class="w-full flex items-center justify-between mb-2.5 px-1">
           <span id="canvas-trans-title" class="text-xs font-mono font-bold text-blue-700">2. SALIDA TRANSFORMADA</span>
-          <button id="download-btn" class="text-[11px] font-mono font-semibold text-blue-600 hover:text-blue-800 transition">Descargar PNG</button>
+          <div class="flex items-center gap-2">
+            <button id="zoom-trans-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
+              <span>Ampliar</span>
+            </button>
+            <button id="download-btn" class="text-[11px] font-mono font-semibold text-blue-600 hover:text-blue-800 transition">Descargar PNG</button>
+          </div>
         </div>
-        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center">
+        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
           <canvas id="canvas-transformed" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+          <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+            Clic para ampliar
+          </div>
         </div>
         <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="canvas-trans-sub">
           Wavelet: Haar • Estrellas Aisladas
@@ -251,6 +267,70 @@
       <div class="p-2.5 bg-slate-50 rounded-xl border border-amber-300 text-center">
         <span class="text-[11px] font-mono text-amber-800 block mb-1.5 font-bold">6. Wavelet Isolation (Hot)</span>
         <canvas id="p6-c6" width="256" height="256" class="w-full aspect-square rounded-lg object-contain bg-black border border-slate-200"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Lightbox de Comparativa y Zoom en Alta Definición -->
+  <div id="zoom-modal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-3 sm:p-6">
+    <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden">
+      <!-- Modal Header -->
+      <div class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div>
+          <h3 id="modal-title" class="text-sm sm:text-base font-bold text-slate-900 font-mono flex items-center gap-2">
+            <span>Inspección Detallada: Comparativa Radiométrica</span>
+            <span id="modal-mode-badge" class="text-[10px] font-mono font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded border border-blue-200">
+              Wavelet HH
+            </span>
+          </h3>
+          <p class="text-xs text-slate-500 font-mono mt-0.5">
+            Pasa el cursor sobre cualquiera de las imágenes para inspeccionar coordenadas y niveles simultáneamente.
+          </p>
+        </div>
+        <button id="close-modal-btn" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition" title="Cerrar (Esc)">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Body (Side by side Canvases) -->
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100">
+        <!-- Entrada Modal -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
+          <div class="w-full flex items-center justify-between mb-2">
+            <span class="text-xs font-mono font-bold text-slate-800">1. Original I(x, y)</span>
+            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+          </div>
+          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
+            <canvas id="modal-canvas-orig" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+          </div>
+          <div id="modal-orig-inspector" class="w-full mt-2 text-[11px] font-mono text-slate-700 bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 text-center font-medium">
+            Coord: (—, —) | Brillo Entrada: —
+          </div>
+        </div>
+
+        <!-- Salida Modal -->
+        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
+          <div class="w-full flex items-center justify-between mb-2">
+            <span id="modal-trans-label" class="text-xs font-mono font-bold text-blue-700">2. Salida Transformada</span>
+            <span id="modal-trans-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+          </div>
+          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
+            <canvas id="modal-canvas-trans" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+          </div>
+          <div id="modal-trans-inspector" class="w-full mt-2 text-[11px] font-mono text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded border border-blue-200 text-center font-medium">
+            Coord: (—, —) | Salida Procesada: —
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 bg-white border-t border-slate-200 flex items-center justify-between text-xs font-mono text-slate-500">
+        <span class="hidden sm:inline">Presiona ESC o haz clic fuera para cerrar</span>
+        <button id="modal-close-action" class="px-4 py-1.5 rounded-lg bg-slate-800 text-white font-semibold hover:bg-slate-900 transition">
+          Cerrar Inspección
+        </button>
       </div>
     </div>
   </div>
@@ -605,6 +685,93 @@
     link.download = `jwst_${currentMode}.png`;
     link.href = canvasTransformed.toDataURL('image/png');
     link.click();
+  });
+
+  // Modal Lightbox de Zoom y Comparativa
+  const zoomModal = document.getElementById('zoom-modal');
+  const closeModalBtn = document.getElementById('close-modal-btn');
+  const modalCloseAction = document.getElementById('modal-close-action');
+  const modalCanvasOrig = document.getElementById('modal-canvas-orig');
+  const modalCanvasTrans = document.getElementById('modal-canvas-trans');
+  const modalCtxOrig = modalCanvasOrig.getContext('2d');
+  const modalCtxTrans = modalCanvasTrans.getContext('2d');
+  const modalModeBadge = document.getElementById('modal-mode-badge');
+  const modalTransLabel = document.getElementById('modal-trans-label');
+  const modalTransDim = document.getElementById('modal-trans-dim');
+  const modalOrigInspector = document.getElementById('modal-orig-inspector');
+  const modalTransInspector = document.getElementById('modal-trans-inspector');
+
+  function openZoomModal() {
+    if (!activeGrayscale) return;
+    zoomModal.classList.remove('hidden');
+    modalModeBadge.innerText = currentMode.toUpperCase();
+    modalTransLabel.innerText = canvasTransTitle.innerText;
+    modalTransDim.innerText = `${canvasTransformed.width} × ${canvasTransformed.height}`;
+
+    modalCanvasOrig.width = canvasOriginal.width;
+    modalCanvasOrig.height = canvasOriginal.height;
+    modalCtxOrig.drawImage(canvasOriginal, 0, 0);
+
+    modalCanvasTrans.width = canvasTransformed.width;
+    modalCanvasTrans.height = canvasTransformed.height;
+    modalCtxTrans.drawImage(canvasTransformed, 0, 0);
+  }
+
+  function closeZoomModal() {
+    zoomModal.classList.add('hidden');
+  }
+
+  canvasOriginal.addEventListener('click', openZoomModal);
+  canvasTransformed.addEventListener('click', openZoomModal);
+  document.getElementById('zoom-orig-btn')?.addEventListener('click', openZoomModal);
+  document.getElementById('zoom-trans-btn')?.addEventListener('click', openZoomModal);
+
+  closeModalBtn.addEventListener('click', closeZoomModal);
+  modalCloseAction.addEventListener('click', closeZoomModal);
+  zoomModal.addEventListener('click', (e) => {
+    if (e.target === zoomModal) closeZoomModal();
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !zoomModal.classList.contains('hidden')) {
+      closeZoomModal();
+    }
+  });
+
+  function updateModalInspector(origX, origY) {
+    if (!activeGrayscale) return;
+    if (origX >= 0 && origX < 512 && origY >= 0 && origY < 512) {
+      const origVal = activeGrayscale[origY * 512 + origX];
+      modalOrigInspector.innerText = `Coord: (${origX}, ${origY}) | Brillo Entrada: ${origVal}`;
+
+      const tW = modalCanvasTrans.width;
+      const tH = modalCanvasTrans.height;
+      const tx = Math.floor(origX * (tW / 512));
+      const ty = Math.floor(origY * (tH / 512));
+      try {
+        const p = modalCtxTrans.getImageData(tx, ty, 1, 1).data;
+        modalTransInspector.innerText = `Coord: (${tx}, ${ty}) | RGBA: (${p[0]}, ${p[1]}, ${p[2]})`;
+      } catch (e) {
+        modalTransInspector.innerText = `Coord: (${tx}, ${ty})`;
+      }
+    }
+  }
+
+  modalCanvasOrig.addEventListener('mousemove', (e) => {
+    const rect = modalCanvasOrig.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * (512 / rect.width));
+    const y = Math.floor((e.clientY - rect.top) * (512 / rect.height));
+    updateModalInspector(x, y);
+  });
+
+  modalCanvasTrans.addEventListener('mousemove', (e) => {
+    const rect = modalCanvasTrans.getBoundingClientRect();
+    const tW = modalCanvasTrans.width;
+    const tH = modalCanvasTrans.height;
+    const tx = Math.floor((e.clientX - rect.left) * (tW / rect.width));
+    const ty = Math.floor((e.clientY - rect.top) * (tH / rect.height));
+    const origX = Math.floor(tx * (512 / tW));
+    const origY = Math.floor(ty * (512 / tH));
+    updateModalInspector(origX, origY);
   });
 
   // Inicio
