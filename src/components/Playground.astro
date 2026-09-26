@@ -126,8 +126,18 @@
               <button data-wavelet-mother="db4" class="wavelet-mother-btn py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 font-mono hover:bg-slate-100">Daubechies 4 (db4)</button>
             </div>
           </div>
+          <!-- Explicación pedagógica de la wavelet activa -->
+          <div id="wavelet-theory-box" class="text-[11px] font-mono p-3 rounded-lg border bg-slate-50 border-slate-200 leading-relaxed text-slate-700 space-y-1.5">
+            <div class="font-bold text-slate-900 flex items-center justify-between">
+              <span id="wavelet-theory-title">Haar (db1): Escalón Cuadrado</span>
+              <span id="wavelet-theory-badge" class="text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold">2 Coeficientes</span>
+            </div>
+            <p id="wavelet-theory-desc">
+              Función discontinua a trozos [+1, -1]. Soporte mínimo que calcula diferencias finitas. Es óptima para fuentes puntuales (estrellas) pero genera bordes en bloque en el gas suave.
+            </p>
+          </div>
           <p class="text-xs text-slate-600">
-            Descompone la imagen en 4 cuadrantes: <strong>LL</strong> (aproximación suave de gas), <strong>HL</strong> (vertical), <strong>LH</strong> (horizontal) y <strong>HH</strong> (estrellas y diagonales).
+            La imagen se descompone en <strong>4 cuadrantes independientes</strong>: <strong>LL</strong> (gas cósmico), <strong>LH</strong> (filamentos H), <strong>HL</strong> (filamentos V) y <strong>HH</strong> (estrellas y diagonales).
           </p>
         </div>
 
@@ -173,49 +183,150 @@
       </div>
     </div>
 
-    <!-- Panel Derecho: Doble Canvas (Marco Limpio sin sombras extrañas) -->
-    <div class="lg:col-span-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Canvas 1: Entrada -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
-        <div class="w-full flex items-center justify-between mb-2.5 px-1">
-          <span class="text-xs font-mono font-bold text-slate-800">1. ENTRADA (Original)</span>
-          <div class="flex items-center gap-1.5">
-            <span id="canvas-orig-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">512 × 512</span>
-            <button id="zoom-orig-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
-              <span>Ampliar</span>
-            </button>
+    <!-- Panel Derecho: Vistas de Canvas -->
+    <div class="lg:col-span-8 flex flex-col gap-4">
+      <!-- 1. Vista Dual Estándar (Entrada + Salida) para Sobel, FFT, IFT y Estrellas -->
+      <div id="standard-dual-view" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Canvas 1: Entrada -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
+          <div class="w-full flex items-center justify-between mb-2.5 px-1">
+            <span class="text-xs font-mono font-bold text-slate-800">1. ENTRADA (Original)</span>
+            <div class="flex items-center gap-1.5">
+              <span id="canvas-orig-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">512 × 512</span>
+              <button id="zoom-orig-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-slate-600 hover:text-slate-900 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
+                <span>Lupa / Matriz</span>
+              </button>
+            </div>
+          </div>
+          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
+            <canvas id="canvas-original" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+            <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+              Clic para lupa de píxeles
+            </div>
+          </div>
+          <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="pixel-inspector">
+            Pasa el cursor sobre la imagen para inspeccionar píxeles
           </div>
         </div>
-        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
-          <canvas id="canvas-original" width="512" height="512" class="w-full h-full object-contain block"></canvas>
-          <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
-            Clic para ampliar
+
+        <!-- Canvas 2: Salida Transformada -->
+        <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
+          <div class="w-full flex items-center justify-between mb-2.5 px-1">
+            <span id="canvas-trans-title" class="text-xs font-mono font-bold text-blue-700">2. SALIDA TRANSFORMADA</span>
+            <div class="flex items-center gap-2">
+              <button id="zoom-trans-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
+                <span>Lupa / Matriz</span>
+              </button>
+              <button id="download-btn" class="text-[11px] font-mono font-semibold text-blue-600 hover:text-blue-800 transition">Descargar PNG</button>
+            </div>
           </div>
-        </div>
-        <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="pixel-inspector">
-          Pasa el cursor sobre la imagen para inspeccionar píxeles
+          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
+            <canvas id="canvas-transformed" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+            <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+              Clic para lupa de píxeles
+            </div>
+          </div>
+          <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="canvas-trans-sub">
+            Wavelet: Haar • Estrellas Aisladas
+          </div>
         </div>
       </div>
 
-      <!-- Canvas 2: Salida Transformada -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 flex flex-col items-center">
-        <div class="w-full flex items-center justify-between mb-2.5 px-1">
-          <span id="canvas-trans-title" class="text-xs font-mono font-bold text-blue-700">2. SALIDA TRANSFORMADA</span>
-          <div class="flex items-center gap-2">
-            <button id="zoom-trans-btn" title="Ampliar e inspeccionar" class="text-[10px] font-mono text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-1.5 py-0.5 rounded transition flex items-center gap-1">
-              <span>Ampliar</span>
-            </button>
-            <button id="download-btn" class="text-[11px] font-mono font-semibold text-blue-600 hover:text-blue-800 transition">Descargar PNG</button>
+      <!-- 2. Vista Dedicada: 4 Cuadrantes Wavelet 2D Separados -->
+      <div id="wavelet-quads-view" class="bg-white rounded-xl p-4 border border-slate-200 hidden flex flex-col gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
+          <div>
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 font-mono uppercase tracking-wider flex items-center gap-2">
+              <span>Wavelet 2D: 4 Cuadrantes Separados de Mallat</span>
+              <span id="quad-mother-badge" class="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded">
+                Base: HAAR
+              </span>
+            </h3>
+            <p class="text-xs text-slate-500 font-mono mt-0.5">
+              Cada sub-banda se procesa de forma independiente (256 × 256 px). Haz clic en cualquier cuadrante para abrir la Lupa.
+            </p>
+          </div>
+          <div class="text-[11px] font-mono text-slate-500 bg-slate-50 px-2.5 py-1 rounded border border-slate-200 whitespace-nowrap self-start sm:self-auto">
+            Submuestreo: ↓2 (Ahorro 75% VRAM)
           </div>
         </div>
-        <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center group cursor-zoom-in">
-          <canvas id="canvas-transformed" width="512" height="512" class="w-full h-full object-contain block"></canvas>
-          <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
-            Clic para ampliar
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Cuadrante LL -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center group">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-slate-800">1. LL (Aproximación - Gas Suave)</span>
+              <button data-quad-zoom="ll" class="text-[10px] font-mono text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 px-2 py-0.5 rounded transition">
+                Ampliar Lupa
+              </button>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 cursor-zoom-in group">
+              <canvas id="canvas-dwt-ll" width="256" height="256" class="w-full h-full object-contain block"></canvas>
+              <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+                Clic para lupa
+              </div>
+            </div>
+            <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-white px-2 py-1 rounded border border-slate-200 text-center">
+              Filtro: h_low * h_low • Preserva brillo cósmico
+            </div>
           </div>
-        </div>
-        <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-center" id="canvas-trans-sub">
-          Wavelet: Haar • Estrellas Aisladas
+
+          <!-- Cuadrante LH -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center group">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-indigo-700">2. LH (Detalles Horizontales)</span>
+              <button data-quad-zoom="lh" class="text-[10px] font-mono text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded transition">
+                Ampliar Lupa
+              </button>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 cursor-zoom-in group">
+              <canvas id="canvas-dwt-lh" width="256" height="256" class="w-full h-full object-contain block"></canvas>
+              <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+                Clic para lupa
+              </div>
+            </div>
+            <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-white px-2 py-1 rounded border border-slate-200 text-center">
+              Filtro: h_high * h_low • Filamentos horizontales
+            </div>
+          </div>
+
+          <!-- Cuadrante HL -->
+          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex flex-col items-center group">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-purple-700">3. HL (Detalles Verticales)</span>
+              <button data-quad-zoom="hl" class="text-[10px] font-mono text-purple-700 bg-white hover:bg-purple-50 border border-purple-200 px-2 py-0.5 rounded transition">
+                Ampliar Lupa
+              </button>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 cursor-zoom-in group">
+              <canvas id="canvas-dwt-hl" width="256" height="256" class="w-full h-full object-contain block"></canvas>
+              <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+                Clic para lupa
+              </div>
+            </div>
+            <div class="w-full mt-2 text-[10px] font-mono text-slate-600 bg-white px-2 py-1 rounded border border-slate-200 text-center">
+              Filtro: h_low * h_high • Filamentos verticales
+            </div>
+          </div>
+
+          <!-- Cuadrante HH -->
+          <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-300 flex flex-col items-center group">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-amber-800">4. HH (Diagonales y Estrellas)</span>
+              <button data-quad-zoom="hh" class="text-[10px] font-mono text-amber-800 bg-white hover:bg-amber-50 border border-amber-300 px-2 py-0.5 rounded transition font-bold">
+                Ampliar Lupa
+              </button>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-amber-400 cursor-zoom-in group">
+              <canvas id="canvas-dwt-hh" width="256" height="256" class="w-full h-full object-contain block"></canvas>
+              <div class="absolute bottom-2 right-2 bg-slate-900/80 text-white text-[10px] font-mono px-2 py-0.5 rounded pointer-events-none opacity-0 group-hover:opacity-100 transition">
+                Clic para lupa
+              </div>
+            </div>
+            <div class="w-full mt-2 text-[10px] font-mono text-amber-900 bg-white px-2 py-1 rounded border border-amber-200 text-center font-bold">
+              Filtro: h_high * h_high • ¡Gas anulado a 0.00!
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -294,33 +405,72 @@
         </button>
       </div>
 
-      <!-- Modal Body (Side by side Canvases) -->
-      <div class="p-4 sm:p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-100">
-        <!-- Entrada Modal -->
-        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
-          <div class="w-full flex items-center justify-between mb-2">
-            <span class="text-xs font-mono font-bold text-slate-800">1. Original I(x, y)</span>
-            <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+      <!-- Modal Body (Side by side Canvases + Matriz 7x7) -->
+      <div class="p-4 sm:p-5 overflow-y-auto flex-1 flex flex-col gap-4 bg-slate-100">
+        <!-- Canvases lado a lado -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Entrada Modal -->
+          <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span class="text-xs font-mono font-bold text-slate-800">1. Original I(x, y)</span>
+              <span class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
+              <canvas id="modal-canvas-orig" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+            </div>
+            <div id="modal-orig-inspector" class="w-full mt-2 text-[11px] font-mono text-slate-700 bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 text-center font-medium">
+              Coord: (—, —) | Brillo Entrada: —
+            </div>
           </div>
-          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
-            <canvas id="modal-canvas-orig" width="512" height="512" class="w-full h-full object-contain block"></canvas>
-          </div>
-          <div id="modal-orig-inspector" class="w-full mt-2 text-[11px] font-mono text-slate-700 bg-slate-50 px-2.5 py-1.5 rounded border border-slate-200 text-center font-medium">
-            Coord: (—, —) | Brillo Entrada: —
+
+          <!-- Salida Modal -->
+          <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
+            <div class="w-full flex items-center justify-between mb-2">
+              <span id="modal-trans-label" class="text-xs font-mono font-bold text-blue-700">2. Salida Transformada</span>
+              <span id="modal-trans-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+            </div>
+            <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
+              <canvas id="modal-canvas-trans" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+            </div>
+            <div id="modal-trans-inspector" class="w-full mt-2 text-[11px] font-mono text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded border border-blue-200 text-center font-medium">
+              Coord: (—, —) | Salida Procesada: —
+            </div>
           </div>
         </div>
 
-        <!-- Salida Modal -->
-        <div class="bg-white p-3 rounded-xl border border-slate-200 flex flex-col items-center shadow-sm">
-          <div class="w-full flex items-center justify-between mb-2">
-            <span id="modal-trans-label" class="text-xs font-mono font-bold text-blue-700">2. Salida Transformada</span>
-            <span id="modal-trans-dim" class="text-[10px] font-mono text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">512 × 512</span>
+        <!-- Matriz Científica 7x7 de Lupa de Píxeles -->
+        <div class="bg-slate-900 text-slate-100 p-4 rounded-xl border border-slate-800 shadow-md">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 pb-2 border-b border-slate-800 mb-3">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-mono font-bold text-amber-400">LUPA DE RESOLUCION ATOMICA: MATRIZ DE PIXELES 7×7</span>
+              <span id="matrix-center-coord" class="text-[10px] font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300 border border-slate-700">
+                Pixel Central: (x: 256, y: 256)
+              </span>
+            </div>
+            <span class="text-[10px] font-mono text-slate-400">
+              Observa como cambian los valores numericos exactos al mover el cursor
+            </span>
           </div>
-          <div class="relative w-full aspect-square bg-black rounded-lg overflow-hidden border border-slate-300 flex items-center justify-center cursor-crosshair">
-            <canvas id="modal-canvas-trans" width="512" height="512" class="w-full h-full object-contain block"></canvas>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Sub-Matriz Entrada 7x7 -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center">
+              <span class="text-[11px] font-mono font-bold text-slate-300 mb-2">Entrada I(x, y) - Vecindad 7×7</span>
+              <div id="matrix-orig-grid" class="grid grid-cols-7 gap-1 w-full max-w-[320px]">
+                <!-- 49 celdas generadas por JS -->
+              </div>
+            </div>
+
+            <!-- Sub-Matriz Salida 7x7 -->
+            <div class="bg-slate-950 p-3 rounded-lg border border-slate-800 flex flex-col items-center">
+              <span id="matrix-trans-title" class="text-[11px] font-mono font-bold text-blue-400 mb-2">Salida Transformada - Vecindad 7×7</span>
+              <div id="matrix-trans-grid" class="grid grid-cols-7 gap-1 w-full max-w-[320px]">
+                <!-- 49 celdas generadas por JS -->
+              </div>
+            </div>
           </div>
-          <div id="modal-trans-inspector" class="w-full mt-2 text-[11px] font-mono text-blue-800 bg-blue-50 px-2.5 py-1.5 rounded border border-blue-200 text-center font-medium">
-            Coord: (—, —) | Salida Procesada: —
+          <div class="mt-2 text-[10px] font-mono text-slate-400 text-center">
+            La celda central resaltada con borde cyan/ambar corresponde al pixel exacto bajo el cursor.
           </div>
         </div>
       </div>
@@ -345,7 +495,8 @@
     applyFrequencyFilterAndIFT, 
     computeDWT2D, 
     getWaveletQuadImage, 
-    isolateWaveletStars
+    isolateWaveletStars,
+    getIndividualSubbandImage
   } from '../scripts/transforms-advanced.js';
 
   let currentRawImage = new Image();
@@ -369,6 +520,18 @@
   const canvasTransformed = document.getElementById('canvas-transformed');
   const ctxOriginal = canvasOriginal.getContext('2d');
   const ctxTransformed = canvasTransformed.getContext('2d');
+
+  const standardDualView = document.getElementById('standard-dual-view');
+  const waveletQuadsView = document.getElementById('wavelet-quads-view');
+  const canvasDwtLL = document.getElementById('canvas-dwt-ll');
+  const canvasDwtLH = document.getElementById('canvas-dwt-lh');
+  const canvasDwtHL = document.getElementById('canvas-dwt-hl');
+  const canvasDwtHH = document.getElementById('canvas-dwt-hh');
+  const quadMotherBadge = document.getElementById('quad-mother-badge');
+
+  const waveletTheoryTitle = document.getElementById('wavelet-theory-title');
+  const waveletTheoryBadge = document.getElementById('wavelet-theory-badge');
+  const waveletTheoryDesc = document.getElementById('wavelet-theory-desc');
 
   const timingBadge = document.getElementById('timing-badge');
   const canvasTransTitle = document.getElementById('canvas-trans-title');
@@ -444,6 +607,29 @@
     ctxTransformed.putImageData(imgData, 0, 0);
   }
 
+  const cachedSubbandImages = {};
+
+  function renderWaveletQuadrants(dwt) {
+    if (!dwt) return;
+    const { LL, LH, HL, HH, halfW, halfH } = dwt;
+    if (quadMotherBadge) quadMotherBadge.innerText = `BASE: ${motherWavelet.toUpperCase()}`;
+
+    function drawSubband(canvas, subband, isDetail, colormap) {
+      if (!canvas) return null;
+      const ctx = canvas.getContext('2d');
+      const uint8 = getIndividualSubbandImage(subband, halfW, halfH, isDetail);
+      const rgba = applyColormap(uint8, halfW, halfH, colormap);
+      const imgData = new ImageData(rgba, halfW, halfH);
+      ctx.putImageData(imgData, 0, 0);
+      return { uint8, rgba };
+    }
+
+    cachedSubbandImages.ll = drawSubband(canvasDwtLL, LL, false, 'grayscale');
+    cachedSubbandImages.lh = drawSubband(canvasDwtLH, LH, true, 'inferno');
+    cachedSubbandImages.hl = drawSubband(canvasDwtHL, HL, true, 'inferno');
+    cachedSubbandImages.hh = drawSubband(canvasDwtHH, HH, true, 'hot');
+  }
+
   function renderCurrentPipeline() {
     if (!activeGrayscale) return;
     const t0 = performance.now();
@@ -476,13 +662,12 @@
       canvasTransSub.innerText = 'Fenómeno de Gibbs (Sobreimpulso 8.95%) • Paleta: INFERNO';
     }
     else if (currentMode === 'wavelet') {
-      canvasTransTitle.innerText = `Wavelet 2D (${motherWavelet.toUpperCase()}) [LL, HL; LH, HH]`;
+      canvasTransTitle.innerText = `Wavelet 2D (${motherWavelet.toUpperCase()}) - 4 Cuadrantes Separados`;
       if (!cachedDWT || cachedDWT.mother !== motherWavelet) {
         cachedDWT = computeDWT2D(activeGrayscale, 512, 512, motherWavelet);
       }
-      const quad = getWaveletQuadImage(cachedDWT);
-      renderOutput(quad, 512, 512, 'grayscale');
-      canvasTransSub.innerText = `Sub-bandas Ortogonales • Wavelet: ${motherWavelet.toUpperCase()}`;
+      renderWaveletQuadrants(cachedDWT);
+      canvasTransSub.innerText = `4 Cuadrantes Independientes • Wavelet: ${motherWavelet.toUpperCase()}`;
     }
     else if (currentMode === 'stars') {
       canvasTransTitle.innerText = `Aislamiento Estelar Óptimo (${motherWavelet.toUpperCase()} - ${starPercentile}%)`;
@@ -566,9 +751,32 @@
       const active = document.getElementById(`controls-${currentMode}`);
       if (active) active.classList.remove('hidden');
 
+      if (currentMode === 'wavelet') {
+        standardDualView?.classList.add('hidden');
+        waveletQuadsView?.classList.remove('hidden');
+      } else {
+        standardDualView?.classList.remove('hidden');
+        waveletQuadsView?.classList.add('hidden');
+      }
+
       renderCurrentPipeline();
     });
   });
+
+  function updateWaveletTheory() {
+    if (!waveletTheoryTitle) return;
+    if (motherWavelet === 'haar') {
+      waveletTheoryTitle.innerText = 'Haar (db1): Escalón Cuadrado';
+      waveletTheoryBadge.innerText = '2 Coeficientes';
+      waveletTheoryBadge.className = 'text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 font-bold';
+      waveletTheoryDesc.innerText = 'Función discontinua a trozos [+1, -1]. Soporte mínimo que calcula diferencias finitas. Es óptima para fuentes puntuales (estrellas) pero genera bordes en bloque en el gas suave.';
+    } else {
+      waveletTheoryTitle.innerText = 'Daubechies 4 (db4): Onda Suave';
+      waveletTheoryBadge.innerText = '4 Coeficientes';
+      waveletTheoryBadge.className = 'text-[9px] px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold';
+      waveletTheoryDesc.innerText = 'Ondícula continua y asimétrica de soporte compacto. Posee 2 momentos nulos (anula constantes y rampas lineales). Elimina el efecto de bloques y modela suavemente el gas continuo y filamentos.';
+    }
+  }
 
   // Mother Wavelet Toggle
   document.querySelectorAll('.wavelet-mother-btn').forEach(btn => {
@@ -581,6 +789,7 @@
       btn.classList.remove('bg-slate-50', 'border-slate-200', 'text-slate-700');
 
       motherWavelet = btn.getAttribute('data-wavelet-mother');
+      updateWaveletTheory();
       cachedDWT = null;
       renderCurrentPipeline();
     });
@@ -687,7 +896,7 @@
     link.click();
   });
 
-  // Modal Lightbox de Zoom y Comparativa
+  // Modal Lightbox de Zoom y Comparativa con Lupa Atómica
   const zoomModal = document.getElementById('zoom-modal');
   const closeModalBtn = document.getElementById('close-modal-btn');
   const modalCloseAction = document.getElementById('modal-close-action');
@@ -701,30 +910,88 @@
   const modalOrigInspector = document.getElementById('modal-orig-inspector');
   const modalTransInspector = document.getElementById('modal-trans-inspector');
 
-  function openZoomModal() {
+  const matrixOrigGrid = document.getElementById('matrix-orig-grid');
+  const matrixTransGrid = document.getElementById('matrix-trans-grid');
+  const matrixCenterCoord = document.getElementById('matrix-center-coord');
+  const matrixTransTitle = document.getElementById('matrix-trans-title');
+
+  const origMatrixCells = [];
+  const transMatrixCells = [];
+
+  function initMatrixGrids() {
+    if (!matrixOrigGrid || !matrixTransGrid) return;
+    matrixOrigGrid.innerHTML = '';
+    matrixTransGrid.innerHTML = '';
+    for (let i = 0; i < 49; i++) {
+      const c1 = document.createElement('div');
+      c1.className = 'w-full aspect-square flex items-center justify-center font-mono font-bold text-[9px] rounded-sm transition-colors border border-slate-800';
+      matrixOrigGrid.appendChild(c1);
+      origMatrixCells.push(c1);
+
+      const c2 = document.createElement('div');
+      c2.className = 'w-full aspect-square flex items-center justify-center font-mono font-bold text-[9px] rounded-sm transition-colors border border-slate-800';
+      matrixTransGrid.appendChild(c2);
+      transMatrixCells.push(c2);
+    }
+  }
+  initMatrixGrids();
+
+  function openZoomModal(subbandKey = null) {
     if (!activeGrayscale) return;
     zoomModal.classList.remove('hidden');
-    modalModeBadge.innerText = currentMode.toUpperCase();
-    modalTransLabel.innerText = canvasTransTitle.innerText;
-    modalTransDim.innerText = `${canvasTransformed.width} × ${canvasTransformed.height}`;
 
     modalCanvasOrig.width = canvasOriginal.width;
     modalCanvasOrig.height = canvasOriginal.height;
     modalCtxOrig.drawImage(canvasOriginal, 0, 0);
 
-    modalCanvasTrans.width = canvasTransformed.width;
-    modalCanvasTrans.height = canvasTransformed.height;
-    modalCtxTrans.drawImage(canvasTransformed, 0, 0);
+    if (subbandKey && typeof subbandKey === 'string' && ['ll', 'lh', 'hl', 'hh'].includes(subbandKey)) {
+      const titles = {
+        ll: 'Cuadrante LL: Aproximación (Gas Cósmico Suave)',
+        lh: 'Cuadrante LH: Detalles Horizontales (Filamentos)',
+        hl: 'Cuadrante HL: Detalles Verticales (Filamentos)',
+        hh: 'Cuadrante HH: Diagonales y Estrellas Aisladas'
+      };
+      modalModeBadge.innerText = `WAVELET ${subbandKey.toUpperCase()}`;
+      modalTransLabel.innerText = titles[subbandKey];
+      modalTransDim.innerText = '256 × 256';
+      if (matrixTransTitle) matrixTransTitle.innerText = `Sub-banda ${subbandKey.toUpperCase()} - Vecindad 7×7`;
+
+      const sourceCanvas = document.getElementById(`canvas-dwt-${subbandKey}`);
+      if (sourceCanvas) {
+        modalCanvasTrans.width = sourceCanvas.width;
+        modalCanvasTrans.height = sourceCanvas.height;
+        modalCtxTrans.drawImage(sourceCanvas, 0, 0);
+      }
+    } else {
+      modalModeBadge.innerText = currentMode.toUpperCase();
+      modalTransLabel.innerText = canvasTransTitle.innerText;
+      modalTransDim.innerText = `${canvasTransformed.width} × ${canvasTransformed.height}`;
+      if (matrixTransTitle) matrixTransTitle.innerText = 'Salida Transformada - Vecindad 7×7';
+
+      modalCanvasTrans.width = canvasTransformed.width;
+      modalCanvasTrans.height = canvasTransformed.height;
+      modalCtxTrans.drawImage(canvasTransformed, 0, 0);
+    }
+
+    updateModalInspector(256, 256);
   }
 
   function closeZoomModal() {
     zoomModal.classList.add('hidden');
   }
 
-  canvasOriginal.addEventListener('click', openZoomModal);
-  canvasTransformed.addEventListener('click', openZoomModal);
-  document.getElementById('zoom-orig-btn')?.addEventListener('click', openZoomModal);
-  document.getElementById('zoom-trans-btn')?.addEventListener('click', openZoomModal);
+  canvasOriginal.addEventListener('click', () => openZoomModal());
+  canvasTransformed.addEventListener('click', () => openZoomModal());
+  document.getElementById('zoom-orig-btn')?.addEventListener('click', () => openZoomModal());
+  document.getElementById('zoom-trans-btn')?.addEventListener('click', () => openZoomModal());
+
+  // Listeners para los 4 cuadrantes
+  ['ll', 'lh', 'hl', 'hh'].forEach(k => {
+    const c = document.getElementById(`canvas-dwt-${k}`);
+    if (c) c.addEventListener('click', () => openZoomModal(k));
+    const btn = document.querySelector(`[data-quad-zoom="${k}"]`);
+    if (btn) btn.addEventListener('click', () => openZoomModal(k));
+  });
 
   closeModalBtn.addEventListener('click', closeZoomModal);
   modalCloseAction.addEventListener('click', closeZoomModal);
@@ -739,19 +1006,57 @@
 
   function updateModalInspector(origX, origY) {
     if (!activeGrayscale) return;
-    if (origX >= 0 && origX < 512 && origY >= 0 && origY < 512) {
-      const origVal = activeGrayscale[origY * 512 + origX];
-      modalOrigInspector.innerText = `Coord: (${origX}, ${origY}) | Brillo Entrada: ${origVal}`;
+    origX = Math.min(511, Math.max(0, origX));
+    origY = Math.min(511, Math.max(0, origY));
 
-      const tW = modalCanvasTrans.width;
-      const tH = modalCanvasTrans.height;
-      const tx = Math.floor(origX * (tW / 512));
-      const ty = Math.floor(origY * (tH / 512));
-      try {
-        const p = modalCtxTrans.getImageData(tx, ty, 1, 1).data;
-        modalTransInspector.innerText = `Coord: (${tx}, ${ty}) | RGBA: (${p[0]}, ${p[1]}, ${p[2]})`;
-      } catch (e) {
-        modalTransInspector.innerText = `Coord: (${tx}, ${ty})`;
+    const origVal = activeGrayscale[origY * 512 + origX];
+    modalOrigInspector.innerText = `Coord: (${origX}, ${origY}) | Brillo Entrada: ${origVal}`;
+    if (matrixCenterCoord) matrixCenterCoord.innerText = `Píxel Central: (x: ${origX}, y: ${origY})`;
+
+    const tW = modalCanvasTrans.width;
+    const tH = modalCanvasTrans.height;
+    const tx = Math.floor(origX * (tW / 512));
+    const ty = Math.floor(origY * (tH / 512));
+
+    try {
+      const p = modalCtxTrans.getImageData(tx, ty, 1, 1).data;
+      modalTransInspector.innerText = `Coord: (${tx}, ${ty}) | RGBA: (${p[0]}, ${p[1]}, ${p[2]})`;
+    } catch (e) {
+      modalTransInspector.innerText = `Coord: (${tx}, ${ty})`;
+    }
+
+    // Actualizar las 49 celdas de la vecindad 7x7
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        const cellIdx = (dy + 3) * 7 + (dx + 3);
+        const isCenter = (dx === 0 && dy === 0);
+
+        // Matriz Entrada
+        const ex = Math.min(511, Math.max(0, origX + dx));
+        const ey = Math.min(511, Math.max(0, origY + dy));
+        const eVal = activeGrayscale[ey * 512 + ex];
+        const cellOrig = origMatrixCells[cellIdx];
+        if (cellOrig) {
+          cellOrig.textContent = eVal;
+          cellOrig.style.backgroundColor = `rgb(${eVal}, ${eVal}, ${eVal})`;
+          cellOrig.style.color = eVal > 120 ? '#000000' : '#ffffff';
+          cellOrig.style.outline = isCenter ? '2px solid #38bdf8' : 'none';
+          cellOrig.style.zIndex = isCenter ? '10' : '1';
+        }
+
+        // Matriz Salida
+        const sx = Math.min(tW - 1, Math.max(0, tx + dx));
+        const sy = Math.min(tH - 1, Math.max(0, ty + dy));
+        const pTrans = modalCtxTrans.getImageData(sx, sy, 1, 1).data;
+        const lum = Math.round(0.299 * pTrans[0] + 0.587 * pTrans[1] + 0.114 * pTrans[2]);
+        const cellTrans = transMatrixCells[cellIdx];
+        if (cellTrans) {
+          cellTrans.textContent = lum;
+          cellTrans.style.backgroundColor = `rgb(${pTrans[0]}, ${pTrans[1]}, ${pTrans[2]})`;
+          cellTrans.style.color = lum > 120 ? '#000000' : '#ffffff';
+          cellTrans.style.outline = isCenter ? '2px solid #f59e0b' : 'none';
+          cellTrans.style.zIndex = isCenter ? '10' : '1';
+        }
       }
     }
   }

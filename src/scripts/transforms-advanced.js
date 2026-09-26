@@ -440,6 +440,22 @@ export function getWaveletQuadImage(dwtResult) {
   return output;
 }
 
+export function getIndividualSubbandImage(subband, halfW, halfH, isDetail = false) {
+  const len = halfW * halfH;
+  const output = new Uint8ClampedArray(len);
+  let max = 0;
+  for (let i = 0; i < len; i++) {
+    const v = Math.abs(subband[i]);
+    if (v > max) max = v;
+  }
+  const scale = max > 0 ? 255 / max : 1;
+  for (let i = 0; i < len; i++) {
+    const val = isDetail ? Math.abs(subband[i]) * scale : subband[i] * scale;
+    output[i] = Math.min(255, Math.max(0, Math.floor(val)));
+  }
+  return output;
+}
+
 export function isolateWaveletStars(dwtResult, thresholdPercentile = 98.5, shrinkage = 'hard') {
   const { LH, HL, HH, halfW, halfH } = dwtResult;
   const n = halfW * halfH;
